@@ -1,0 +1,8 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+
+ .ms-options-wrap > .ms-options, .ms-options-wrap > button:focus, .ms-options-wrap > button {
+    width: 200px !important;
+ }
