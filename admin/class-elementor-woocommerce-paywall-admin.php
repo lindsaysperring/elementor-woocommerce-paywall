@@ -20,7 +20,8 @@
  * @subpackage Elementor_Woocommerce_Paywall/admin
  * @author     Lindsay Sperring <lindsay@lindsaysperring.com>
  */
-class Elementor_Woocommerce_Paywall_Admin {
+class Elementor_Woocommerce_Paywall_Admin
+{
 
 	/**
 	 * The ID of this plugin.
@@ -59,17 +60,26 @@ class Elementor_Woocommerce_Paywall_Admin {
 	private $settings;
 
 	/**
+	 * Products so it doesn't have to be gotten twice
+	 * 
+	 * @since 1.0.0
+	 * @access private
+	 * @var array
+	 */
+	private $products;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
 	 * @param      string    $plugin_name       The name of this plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public function __construct($plugin_name, $version)
+	{
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
-
 	}
 
 	/**
@@ -77,7 +87,8 @@ class Elementor_Woocommerce_Paywall_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_styles($hook_suffix) {
+	public function enqueue_styles($hook_suffix)
+	{
 		if ($hook_suffix != 'toplevel_page_elementor-paywall/admin') {
 			return;
 		}
@@ -93,12 +104,11 @@ class Elementor_Woocommerce_Paywall_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/elementor-woocommerce-paywall-admin.css', array(), $this->version, 'all' );
-		wp_register_style( 'bootstrap-multiselect', 'https://phpcoder.tech/multiselect/css/jquery.multiselect.css');
-		wp_enqueue_style( 'bootstrap-multiselect');
-		wp_register_style( 'elementor-paywall-bootstrap', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css');				
-		wp_enqueue_style( 'elementor-paywall-bootstrap');
-
+		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/elementor-woocommerce-paywall-admin.css', array(), $this->version, 'all');
+		wp_register_style('bootstrap-multiselect', 'https://phpcoder.tech/multiselect/css/jquery.multiselect.css');
+		wp_enqueue_style('bootstrap-multiselect');
+		wp_register_style('elementor-paywall-bootstrap', 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css');
+		wp_enqueue_style('elementor-paywall-bootstrap');
 	}
 
 	/**
@@ -106,7 +116,8 @@ class Elementor_Woocommerce_Paywall_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts($hook_suffix) {
+	public function enqueue_scripts($hook_suffix)
+	{
 		if ($hook_suffix != 'toplevel_page_elementor-paywall/admin') {
 			return;
 		}
@@ -122,20 +133,21 @@ class Elementor_Woocommerce_Paywall_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/elementor-woocommerce-paywall-admin.js', array( 'jquery' ), $this->version, false );
-		wp_register_script( 'bootstrap-multiselect', 'https://phpcoder.tech/multiselect/js/jquery.multiselect.js');
-		wp_enqueue_script( 'bootstrap-multiselect');
-		wp_register_script( 'elementor-paywall-bootstrap', 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.2/js/bootstrap.bundle.min.js');
-		wp_enqueue_script( 'elementor-paywall-bootstrap');
-
+		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/elementor-woocommerce-paywall-admin.js', array('jquery'), $this->version, false);
+		wp_register_script('bootstrap-multiselect', 'https://phpcoder.tech/multiselect/js/jquery.multiselect.js');
+		wp_enqueue_script('bootstrap-multiselect');
+		wp_register_script('elementor-paywall-bootstrap', 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.2/js/bootstrap.bundle.min.js');
+		wp_enqueue_script('elementor-paywall-bootstrap');
 	}
 
-	public function admin_menu() {
-		add_menu_page( "Elementor Paywall Settings", "Elementor Paywall", "manage_options", $this->slug, array($this, "admin_menu_page") );
+	public function admin_menu()
+	{
+		add_menu_page("Elementor Paywall Settings", "Elementor Paywall", "manage_options", $this->slug, array($this, "admin_menu_page"));
 	}
 
-	public function admin_menu_page() {
-		?>		
+	public function admin_menu_page()
+	{
+?>
 		<div class="wrap">
 			<h2>Elementor Paywall Settings</h2>
 			<p></p>
@@ -143,79 +155,200 @@ class Elementor_Woocommerce_Paywall_Admin {
 
 			<form method="post" action="options.php">
 				<?php
-					settings_fields( $this->slug );
-					do_settings_sections( $this->slug );
-					submit_button();
+				settings_fields($this->slug);
+				do_settings_sections($this->slug);
+				submit_button();
+				?>
+			</form>
+
+			<?php echo $this->product_select(); ?>
+
+			<form method="post" action="options.php">
+				<?php
+				settings_fields($this->slug . "2");
+				do_settings_sections($this->slug . "2");
+				submit_button();
 				?>
 			</form>
 		</div>
-		<?php
+	<?php
 	}
 
-	public function elementor_paywall_settings_page_init() {
-		register_setting( $this->slug, 'ep_settings' );
+	public function elementor_paywall_settings_page_init()
+	{
+		register_setting($this->slug, 'ep_settings');
+
+		register_setting($this->slug . "2", 'ep_settings_product_post_link');
 
 		add_settings_section(
-			'elementor-paywall-settings-section', 
-			'Paywall Settings', 
-			'', 
+			'elementor-paywall-settings-section',
+			'Paywall Settings',
+			'',
 			$this->slug
 		);
-	
-		add_settings_field( 
-			'ep_post_type_select', 
-			'Select Post Type where paywall applies', 
-			array($this, "post_type_select"), 
-			$this->slug, 
-			'elementor-paywall-settings-section' 
+
+		add_settings_section('product-post-binding-section', 'Link Posts to Products', '', $this->slug . "2");
+
+		add_settings_field(
+			'ep_post_type_select',
+			'Select Post Type where paywall applies',
+			array($this, "post_type_select"),
+			$this->slug,
+			'elementor-paywall-settings-section'
+		);
+
+		add_settings_field(
+			'ep_post_product_select',
+			'Select posts',
+			array($this, 'post_product_select'),
+			$this->slug . "2",
+			'product-post-binding-section'
 		);
 	}
 
-	public function post_type_select() {
+	public function post_type_select()
+	{
 		$args = array(
 			'public'   => true,
 			'_builtin' => false
-		 );
-		$post_types = get_post_types( $args, "names", "or" );
-		$options = get_option( 'ep_settings' );
-		
-		?>
-			<select name="ep_settings[post_type][]" multiple class="select" id="post_type_multiselect">
-				<?php
-				foreach ($post_types as $key => $value) {
-					$selected = in_array($key, $options['post_type']) ? 'selected' : '';
-					?>
-					<option value="<?php echo $key ?>" <?php echo $selected; ?>><?php echo $value;?></option>
-					<?php
-				}
-				?>
-			</select>
-		<?php
-	}
-
-	public function post_product_select() {
-		if (!isset($settings)) {
-			$settings = get_option( 'ep_settings' );
+		);
+		$post_types = get_post_types($args, "names", "or");
+		if (!isset($this->settings)) {
+			$this->settings = get_option('ep_settings');
 		}
-		$posts = [];
-		foreach($settings as $key => $value) {
-			$tempPosts = get_posts( ['post_type' => $value, 'numberposts' => -1] ;)
-			$posts = array_merge($posts, $tempPosts);
-		}
-		?>
-		<div id="post-product-select">
 
-		</div>
-		<select>
+		if (!is_array($this->settings)) {
+			$this->settings = array();
+		}
+
+		if ($this->settings == false || !array_key_exists("post_type", $this->settings)) {
+			$this->settings['post_type'] = array();
+		}
+
+	?>
+		<select name="ep_settings[post_type][]" multiple class="select" id="post_type_multiselect">
 			<?php
-			foreach ($posts as $key => $value){
-				?>
-				<option value="<?php echo $value-> ?>"></option>
-				<?php
+			foreach ($post_types as $key => $value) {
+				$selected = in_array($key, $this->settings['post_type']) ? 'selected' : '';
+			?>
+				<option value="<?php echo $key ?>" <?php echo $selected; ?>><?php echo $value; ?></option>
+			<?php
 			}
 			?>
 		</select>
-		<?php
+	<?php
 	}
 
+	public function product_select()
+	{
+		$args = array(
+			'post_type'      => 'product',
+			'numberposts' => -1
+		);
+		$products = get_posts($args);
+
+	?>
+		<label for="product_select">Select Product</label>
+		<select id="product_select">
+			<?php
+			foreach ($products as $product) {
+			?>
+				<option value="<?php echo $product->ID; ?>"><?php echo $product->post_title; ?></option>
+			<?php
+			}
+			?>
+		</select>
+		<button id="product_select_button">Select</button>
+	<?php
+	}
+
+	public function post_product_select()
+	{
+		if (!isset($this->settings)) {
+			$this->settings = get_option('ep_settings');
+		}
+		if (!is_array($this->settings)) {
+			$this->settings = array();
+		}
+
+		$posts = [];
+		if ($this->settings != false && array_key_exists("post_type", $this->settings)) {
+			foreach ($this->settings as $value) {
+				$tempPosts = get_posts(['post_type' => $value, 'numberposts' => -1]);
+				$posts = array_merge($posts, $tempPosts);
+			}
+		}
+
+		$existing = get_option('ep_settings_product_post_link');
+		if ($existing == false || !is_array($existing)) {
+			$existing = array();
+		}
+
+		$product_post_array = array();
+	?>
+		<script>
+			const posts = <?php echo json_encode($posts); ?>
+		</script>
+		<div id="post-product-select">
+			<?php
+			foreach ($existing as $key => $values) {
+				array_push($product_post_array, "ep_settings_product_post_link_" . $key);
+			?>
+				<div id="ep_settings_product_post_link_wrapper_<?php echo $key; ?>">
+					<label for="<?php echo $key; ?>"><?php echo $this->getProductFromId($key); ?></label>
+					<select name="ep_settings_product_post_link[<?php echo $key; ?>][]" id="ep_settings_product_post_link_<?php echo $key; ?>" multiple class="select" style="display:inline;">
+						<?php
+						foreach ($posts as $post) {
+						?>
+							<option value="<?php echo $post->ID; ?>" <?php echo (in_array($post->ID, $values) ? "selected" : "") ?>><?php echo $post->post_title; ?></option>
+						<?php
+						}
+						?>
+					</select>
+					<span onclick="deleteInput(<?php echo $key; ?>)" style="cursor:pointer;">&#x2715;</span>
+				</div>
+			<?php
+			}
+			?>
+		</div>
+		<?php if (count($product_post_array) > 0) {
+		?>
+			<script>
+				<?php foreach ($product_post_array as $select) { ?>
+						(function($) {
+							"use strict";
+
+							$(document).ready(function() {
+								$(`#<?php echo $select; ?>`).multiselect({
+									nonSelectedText: "Select Framework",
+									enableFiltering: true,
+									enableCaseInsensitiveFiltering: true,
+									buttonWidth: "400px",
+								});
+							});
+						})(jQuery);
+				<?php } ?>
+			</script>
+<?php
+		}
+	}
+
+	public function getProductFromId($id)
+	{
+		if (!isset($this->products)) {
+			$args = array(
+				'post_type'      => 'product',
+				'numberposts' => -1
+			);
+			$this->products = get_posts($args);
+		}
+
+		foreach ($this->products as $product) {
+			if ($product->ID == $id) {
+				return $product->post_title;
+			}
+		}
+
+		return "";
+	}
 }
