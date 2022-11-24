@@ -20,7 +20,8 @@
  * @subpackage Elementor_Woocommerce_Paywall/public
  * @author     Lindsay Sperring <lindsay@lindsaysperring.com>
  */
-class Elementor_Woocommerce_Paywall_Public {
+class Elementor_Woocommerce_Paywall_Public
+{
 
 	/**
 	 * The ID of this plugin.
@@ -47,11 +48,11 @@ class Elementor_Woocommerce_Paywall_Public {
 	 * @param      string    $plugin_name       The name of the plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public function __construct($plugin_name, $version)
+	{
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
-
 	}
 
 	/**
@@ -59,7 +60,8 @@ class Elementor_Woocommerce_Paywall_Public {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_styles() {
+	public function enqueue_styles()
+	{
 
 		/**
 		 * This function is provided for demonstration purposes only.
@@ -73,8 +75,7 @@ class Elementor_Woocommerce_Paywall_Public {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/elementor-woocommerce-paywall-public.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/elementor-woocommerce-paywall-public.css', array(), $this->version, 'all');
 	}
 
 	/**
@@ -82,7 +83,8 @@ class Elementor_Woocommerce_Paywall_Public {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts() {
+	public function enqueue_scripts()
+	{
 
 		/**
 		 * This function is provided for demonstration purposes only.
@@ -96,8 +98,7 @@ class Elementor_Woocommerce_Paywall_Public {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/elementor-woocommerce-paywall-public.js', array( 'jquery' ), $this->version, false );
-
+		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/elementor-woocommerce-paywall-public.js', array('jquery'), $this->version, false);
 	}
 
 	/**
@@ -109,32 +110,33 @@ class Elementor_Woocommerce_Paywall_Public {
 	 * snippet modified from https://stackoverflow.com/a/38772202/18434026
 	 */
 
-	public function has_bought_items($bought_product_id) {
+	public function has_bought_items($bought_product_id)
+	{
 		$bought = false;
-	
+
 		// Get all customer orders
-		$customer_orders = get_posts( array(
+		$customer_orders = get_posts(array(
 			'numberposts' => -1,
 			'meta_key'    => '_customer_user',
 			'meta_value'  => get_current_user_id(),
 			'post_type'   => 'shop_order', // WC orders post type
 			'post_status' => 'wc-completed' // Only orders with status "completed"
-		) );
-		foreach ( $customer_orders as $customer_order ) {
+		));
+		foreach ($customer_orders as $customer_order) {
 			// Updated compatibility with WooCommerce 3+
-			$order = wc_get_order( $customer_order );
-			$order_id = method_exists( $order, 'get_id' ) ? $order->get_id() : $order->id;			
-	
+			$order = wc_get_order($customer_order);
+			$order_id = method_exists($order, 'get_id') ? $order->get_id() : $order->id;
+
 			// Iterating through each current customer products bought in the order
 			foreach ($order->get_items() as $item) {
 				// WC 3+ compatibility
-				if ( version_compare( WC_VERSION, '3.0', '<' ) ) 
+				if (version_compare(WC_VERSION, '3.0', '<'))
 					$product_id = $item['product_id'];
 				else
 					$product_id = $item->get_product_id();
-	
+
 				// Your condition related to your 2 specific products Ids
-				if ( $bought_product_id == $product_id ) 
+				if ($bought_product_id == $product_id)
 					$bought = true;
 			}
 		}
@@ -142,21 +144,42 @@ class Elementor_Woocommerce_Paywall_Public {
 		return $bought;
 	}
 
-	function should_render($bool, $widget) {
-		if ('theme-post-excerpt' == $widget->get_name() && !$this->has_bought_items(15)) {
-			return false;
+	function should_render($bool, $widget)
+	{
+		$post_product_settings = get_option('ep_settings_product_post_link');
+		if ($post_product_settings == false || !is_array($post_product_settings)) {
+			return true;
 		}
+
+		$postId = get_the_ID();
+
+		foreach ($post_product_settings as $productId => $postArray) {
+			if (in_array($postArray, $postId) && 'theme-post-excerpt' == $widget->get_name()) {
+				return $this->has_bought_items($productId);
+			}
+		}
+
 		return true;
 	}
 
-	function hide_content($widget_content, $widget) {
-		var_dump($widget);
-		if ('theme-post-excerpt' == $widget->get_name() && !$this->has_bought_items(15)) {
-			return null;
+	function hide_content($widget_content, $widget)
+	{
+		if ('theme-post-excerpt' == $widget->get_name()) {
+			var_dump($widget->get_settings_for_display()['_element_id']);
+		}
+		$post_product_settings = get_option('ep_settings_product_post_link');
+		if ($post_product_settings == false || !is_array($post_product_settings)) {
+			return $widget_content;
+		}
+
+		$postId = get_the_ID();
+
+		foreach ($post_product_settings as $productId => $postArray) {
+			if (in_array($postId, $postArray) && 'theme-post-excerpt' == $widget->get_name() && !$this->has_bought_items($productId)) {
+				return null;
+			}
 		}
 
 		return $widget_content;
 	}
-
-	
 }

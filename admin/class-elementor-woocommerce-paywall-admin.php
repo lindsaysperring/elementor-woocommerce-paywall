@@ -80,6 +80,12 @@ class Elementor_Woocommerce_Paywall_Admin
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->settings = get_option('ep_settings');
+
+
+		if (!is_array($this->settings)) {
+			$this->settings = array();
+		}
 	}
 
 	/**
@@ -198,6 +204,22 @@ class Elementor_Woocommerce_Paywall_Admin
 		);
 
 		add_settings_field(
+			'ep_paywall_css_id',
+			'CSS ID of element to hide',
+			array($this, "paywall_css_id"),
+			$this->slug,
+			'elementor-paywall-settings-section'
+		);
+
+		add_settings_field(
+			'ep_paywall_css_id_to_show',
+			'CSS ID of element to show when not bought',
+			array($this, "paywall_css_id_show"),
+			$this->slug,
+			'elementor-paywall-settings-section'
+		);
+
+		add_settings_field(
 			'ep_post_product_select',
 			'Select posts',
 			array($this, 'post_product_select'),
@@ -213,13 +235,6 @@ class Elementor_Woocommerce_Paywall_Admin
 			'_builtin' => false
 		);
 		$post_types = get_post_types($args, "names", "or");
-		if (!isset($this->settings)) {
-			$this->settings = get_option('ep_settings');
-		}
-
-		if (!is_array($this->settings)) {
-			$this->settings = array();
-		}
 
 		if ($this->settings == false || !array_key_exists("post_type", $this->settings)) {
 			$this->settings['post_type'] = array();
@@ -236,6 +251,30 @@ class Elementor_Woocommerce_Paywall_Admin
 			}
 			?>
 		</select>
+	<?php
+	}
+
+	public function paywall_css_id()
+	{
+
+		if (!array_key_exists('paywall_id', $this->settings)) {
+			$this->settings['paywall_id'] = "";
+		}
+
+	?>
+		<input name="ep_settings[paywall_id]" type="text" value="<?php echo esc_attr($this->settings['paywall_id']); ?>" />
+	<?php
+	}
+
+	public function paywall_css_id_show()
+	{
+
+		if (!array_key_exists('paywall_id_show', $this->settings)) {
+			$this->settings['paywall_id_show'] = "";
+		}
+
+	?>
+		<input name=" ep_settings[paywall_id]" type="text" value="<?php echo esc_attr($this->settings['paywall_id_show']); ?>" />
 	<?php
 	}
 
@@ -264,16 +303,10 @@ class Elementor_Woocommerce_Paywall_Admin
 
 	public function post_product_select()
 	{
-		if (!isset($this->settings)) {
-			$this->settings = get_option('ep_settings');
-		}
-		if (!is_array($this->settings)) {
-			$this->settings = array();
-		}
 
 		$posts = [];
 		if ($this->settings != false && array_key_exists("post_type", $this->settings)) {
-			foreach ($this->settings as $value) {
+			foreach ($this->settings["post_type"] as $value) {
 				$tempPosts = get_posts(['post_type' => $value, 'numberposts' => -1]);
 				$posts = array_merge($posts, $tempPosts);
 			}
