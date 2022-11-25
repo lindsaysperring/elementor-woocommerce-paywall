@@ -45,15 +45,13 @@
       console.log(posts);
       let select_string = `
 	  <div id="ep_settings_product_post_link_wrapper_${id}">
-	  <label htmlFor="${id}">${value}</label>
+	  <label htmlFor="${id}"></select><span onclick="deleteInput(${id})" class="ep_product_delete">&#x2715;</span></div>${value}</label>
 	  <select name="ep_settings_product_post_link[${id}][]" id="ep_settings_product_post_link_${id}" multiple class="select" style="display:inline;">
 	  `;
 
       posts.forEach((post) => {
         select_string += `<option value="${post.ID}">${post.post_title}</option>`;
       });
-
-      select_string += `</select><span onclick="deleteInput(${id})" style="cursor:pointer;">&#x2715;</span></div>`;
 
       $("#post-product-select").append(select_string);
 

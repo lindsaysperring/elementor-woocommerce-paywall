@@ -328,7 +328,7 @@ class Elementor_Woocommerce_Paywall_Admin
 				array_push($product_post_array, "ep_settings_product_post_link_" . $key);
 			?>
 				<div id="ep_settings_product_post_link_wrapper_<?php echo $key; ?>">
-					<label for="<?php echo $key; ?>"><?php echo $this->getProductFromId($key); ?></label>
+					<label for="<?php echo $key; ?>"><span onclick="deleteInput(<?php echo $key; ?>)" class="ep_product_delete">&#x2715;</span><?php echo $this->getProductFromId($key); ?></label>
 					<select name="ep_settings_product_post_link[<?php echo $key; ?>][]" id="ep_settings_product_post_link_<?php echo $key; ?>" multiple class="select" style="display:inline;">
 						<?php
 						foreach ($posts as $post) {
@@ -337,8 +337,7 @@ class Elementor_Woocommerce_Paywall_Admin
 						<?php
 						}
 						?>
-					</select>
-					<span onclick="deleteInput(<?php echo $key; ?>)" style="cursor:pointer;">&#x2715;</span>
+					</select>					
 				</div>
 			<?php
 			}
