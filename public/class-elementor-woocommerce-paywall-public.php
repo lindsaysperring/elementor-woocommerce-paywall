@@ -63,6 +63,13 @@ class Elementor_Woocommerce_Paywall_Public
 	private $element_to_show_css_id = "";
 
 	/**
+	 * @since 1.0.0
+	 * @access private
+	 * @var array	$customer_orders	array of products user has purchased
+	 */
+	private $customer_orders;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -82,9 +89,11 @@ class Elementor_Woocommerce_Paywall_Public
 		if (!is_array($settings)) {
 			$this->settings = array();
 		}
+
 		if (array_key_exists('paywall_id', $settings)) {
 			$this->element_to_hide_css_id = $settings['paywall_id'];
 		}
+
 		if (array_key_exists('paywall_id_show', $settings)) {
 			$this->element_to_show_css_id = $settings['paywall_id_show'];
 		}
@@ -149,15 +158,17 @@ class Elementor_Woocommerce_Paywall_Public
 	{
 		$bought = false;
 
-		// Get all customer orders
-		$customer_orders = get_posts(array(
-			'numberposts' => -1,
-			'meta_key'    => '_customer_user',
-			'meta_value'  => get_current_user_id(),
-			'post_type'   => 'shop_order', // WC orders post type
-			'post_status' => 'wc-completed' // Only orders with status "completed"
-		));
-		foreach ($customer_orders as $customer_order) {
+		if (!isset($this->customer_orders)) {
+			$this->customer_orders = get_posts(array(
+				'numberposts' => -1,
+				'meta_key'    => '_customer_user',
+				'meta_value'  => get_current_user_id(),
+				'post_type'   => 'shop_order', // WC orders post type
+				'post_status' => 'wc-completed' // Only orders with status "completed"
+			));
+		}
+
+		foreach ($this->customer_orders as $customer_order) {
 			// Updated compatibility with WooCommerce 3+
 			$order = wc_get_order($customer_order);
 
