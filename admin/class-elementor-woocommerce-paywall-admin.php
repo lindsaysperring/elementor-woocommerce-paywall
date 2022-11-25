@@ -256,7 +256,7 @@ class Elementor_Woocommerce_Paywall_Admin
 
 	public function paywall_css_id()
 	{
-
+		
 		if (!array_key_exists('paywall_id', $this->settings)) {
 			$this->settings['paywall_id'] = "";
 		}
@@ -274,7 +274,7 @@ class Elementor_Woocommerce_Paywall_Admin
 		}
 
 	?>
-		<input name=" ep_settings[paywall_id]" type="text" value="<?php echo esc_attr($this->settings['paywall_id_show']); ?>" />
+		<input name=" ep_settings[paywall_id_show]" type="text" value="<?php echo esc_attr($this->settings['paywall_id_show']); ?>" />
 	<?php
 	}
 

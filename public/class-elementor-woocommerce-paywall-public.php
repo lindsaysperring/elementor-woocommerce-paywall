@@ -42,6 +42,27 @@ class Elementor_Woocommerce_Paywall_Public
 	private $version;
 
 	/**
+	 * @since 	1.0.0
+	 * @access 	private
+	 * @var 	array	$post_product_settings		array of product-post bindings
+	 */
+	private $post_product_settings;
+
+	/**
+	 * @since 	1.0.0
+	 * @access 	private
+	 * @var 	string	$element_to_hide_css_id		element to hide when user hasn't bought product
+	 */
+	private $element_to_hide_css_id = "";
+
+	/**
+	 * @since 	1.0.0
+	 * @access 	private
+	 * @var 	string	$element_to_show_css_id		element to show when user hasn't bought product
+	 */
+	private $element_to_show_css_id = "";
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -53,6 +74,20 @@ class Elementor_Woocommerce_Paywall_Public
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->post_product_settings = get_option('ep_settings_product_post_link');
+		if (!is_array($this->post_product_settings)) {
+			$this->post_product_settings = array();
+		}
+		$settings = get_option('ep_settings');
+		if (!is_array($settings)) {
+			$this->settings = array();
+		}
+		if (array_key_exists('paywall_id', $settings)) {
+			$this->element_to_hide_css_id = $settings['paywall_id'];
+		}
+		if (array_key_exists('paywall_id_show', $settings)) {
+			$this->element_to_show_css_id = $settings['paywall_id_show'];
+		}
 	}
 
 	/**
@@ -110,7 +145,7 @@ class Elementor_Woocommerce_Paywall_Public
 	 * snippet modified from https://stackoverflow.com/a/38772202/18434026
 	 */
 
-	public function has_bought_items($bought_product_id)
+	private function has_bought_items($bought_product_id)
 	{
 		$bought = false;
 
@@ -144,42 +179,59 @@ class Elementor_Woocommerce_Paywall_Public
 		return $bought;
 	}
 
-	function should_render($bool, $widget)
+	public function should_render($bool, $widget)
 	{
-		$post_product_settings = get_option('ep_settings_product_post_link');
-		if ($post_product_settings == false || !is_array($post_product_settings)) {
+		if (
+			$this->post_product_settings == false || !is_array($this->post_product_settings)
+			|| ($widget->get_settings_for_display()['_element_id'] != $this->element_to_hide_css_id
+				&& $widget->get_settings_for_display()['_element_id'] != $this->element_to_show_css_id)
+		) {
 			return true;
 		}
 
-		$postId = get_the_ID();
 
-		foreach ($post_product_settings as $productId => $postArray) {
-			if (in_array($postArray, $postId) && 'theme-post-excerpt' == $widget->get_name()) {
-				return $this->has_bought_items($productId);
+		if ($this->paywall_is_active()) {
+			if ($widget->get_settings_for_display()['_element_id'] == $this->element_to_hide_css_id) {
+				return false;
+			} elseif ($widget->get_settings_for_display()['_element_id'] == $this->element_to_show_css_id) {
+				return true;
 			}
 		}
 
-		return true;
+		if ($widget->get_settings_for_display()['_element_id'] == $this->element_to_show_css_id) {
+			return false;
+		}
+
+		return $bool;
 	}
 
-	function hide_content($widget_content, $widget)
+	public function hide_content($widget_content, $widget)
 	{
-		if ('theme-post-excerpt' == $widget->get_name()) {
-			var_dump($widget->get_settings_for_display()['_element_id']);
-		}
-		$post_product_settings = get_option('ep_settings_product_post_link');
-		if ($post_product_settings == false || !is_array($post_product_settings)) {
+		if (
+			$this->post_product_settings == false
+			|| !is_array($this->post_product_settings)
+			|| $widget->get_settings_for_display()['_element_id'] != $this->element_to_hide_css_id
+		) {
 			return $widget_content;
 		}
 
-		$postId = get_the_ID();
-
-		foreach ($post_product_settings as $productId => $postArray) {
-			if (in_array($postId, $postArray) && 'theme-post-excerpt' == $widget->get_name() && !$this->has_bought_items($productId)) {
-				return null;
-			}
+		if ($this->paywall_is_active()) {
+			var_dump("hello");
+			return null;
 		}
 
 		return $widget_content;
+	}
+
+	public function paywall_is_active()
+	{
+		$postId = get_the_ID();
+		foreach ($this->post_product_settings as $productId => $postArray) {
+			if (in_array($postId, $postArray) && !$this->has_bought_items($productId)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

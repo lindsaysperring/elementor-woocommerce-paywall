@@ -176,7 +176,7 @@ class Elementor_Woocommerce_Paywall {
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
 		$this->loader->add_filter('elementor/widget/render_content', $plugin_public, 'hide_content', 10, 2);
-		// $this->loader->add_filter('elementor/frontend/widget/should_render', $plugin_public, 'should_render', 10, 2);	
+		$this->loader->add_filter('elementor/frontend/widget/should_render', $plugin_public, 'should_render', 10, 2);	
 	}
 
 	/**
