@@ -160,7 +160,6 @@ class Elementor_Woocommerce_Paywall_Public
 		foreach ($customer_orders as $customer_order) {
 			// Updated compatibility with WooCommerce 3+
 			$order = wc_get_order($customer_order);
-			$order_id = method_exists($order, 'get_id') ? $order->get_id() : $order->id;
 
 			// Iterating through each current customer products bought in the order
 			foreach ($order->get_items() as $item) {
